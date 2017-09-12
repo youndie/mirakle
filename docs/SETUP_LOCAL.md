@@ -48,17 +48,3 @@
   ```
   $ ssh {REMOTE_MACHINE_ALIAS}
   ```
-
-## Configuration
-
-1. Download [latest release version of `mainframer`](https://github.com/gojuno/mainframer/releases/latest) and save it in your project. Most likely commit it to version control system so you could sync changes across all team members.
-
-  We recommend you to subscribe to changes in this repo (follow it on GitHub / watch for tweets of its maintainers / etc). This will allow you to apply best practises we found to make `mainframer` faster and safer.
-
-2. Carefully read [Configuration documentation](CONFIGURATION.md) and configure mainframer for your kind of project.
-
-3. Finally you can test the build.
-
-  ```
-  $ ./mainframer echo "It works!" > success.txt
-  ```

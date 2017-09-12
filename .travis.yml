@@ -1,11 +1,16 @@
-# We use Docker → we need sudo.
 sudo: required
-
-services:
-  - docker
-
+language: java
+jdk:
+  - oraclejdk8
+before_install:
+  - chmod +x .travis-ssh.sh
 script:
-  - ci/build.sh
-
-notifications:
-  email: false
+  - ./.travis-ssh.sh
+  - ./gradlew mirakle:build mirakle:install plugin-test:test
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.gradle'
+    - '.gradle'
+os:
+  - linux

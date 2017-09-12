@@ -1,9 +1,23 @@
-.gradle
-/local.properties
-/.idea/
-*.iml
-.DS_Store
+# Generated files
+bin/
+gen/
+out/
+
+# Gradle files
+.gradle/
+# except gradle wrapper properties
+!.gradle/wrapper/gradle-wrapper.properties
+
 build/
 
-# Share code style.
-!.idea/codeStyleSettings.xml
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Intellij
+*.iml
+.idea/
+
+.DS_Store
+
+reports/
+benchmark_results/

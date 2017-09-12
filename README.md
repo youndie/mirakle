@@ -1,65 +1,74 @@
-# Mainframer
+# Mirakle
+A Gradle plugin that allows you to move build process from a local machine to a remote one.
 
-Tool that allows you to move build process from a local machine to a remote one.
-
-Remote machine ought to be much faster than a laptop. 
-With `mainframer` you can free up your local machine for better things —
-like editing source code in your IDE without lags and
-freezes, being able to actually _use_ your computer when the build is happening.
-
-## Table of contents
-
-- [Supported Actions](#supported-actions)
-- [Setup](#setup)
-- [Demo](#demo)
-- [3rd-party IntelliJ Mainframer Plugin](#3rd-party-intellij-mainframer-plugin)
-- [How to Run Tests (for contributors)](#how-to-run-tests-for-contributors)
-- [License](#license)
-
-## Supported Actions
-
-`mainframer` supports basically anything you can execute as a command.
-It will sync files to remote machine, execute a command and sync files back.
-
-We have quite a bunch of samples showing off some practical applications.
-
-* [Gradle](samples/gradle)
-* [Gradle Android](samples/gradle-android)
-* [Rust](samples/rust)
-* [Clang](samples/clang)
-* [GCC](samples/gcc)
-* [Maven](samples/mvn)
-* [Buck](samples/buck)
-* [Go](samples/go)
+Works seamlessly with IntelliJ IDEA and Android Studio. No plugin required.
 
 ## Setup
+* Put this into `USER_HOME/.gradle/init.d/mirakle.gradle`
+```groovy
+initscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.instamotor:mirakle:1.0.0"
+    }
+}
+ 
+apply plugin: Mirakle
+ 
+rootProject {
+    mirakle {
+        host "your_remote_machine"
+    }
+}
+```
+* [Setup local machine](docs/SETUP_LOCAL.md)
+* [Setup remote machine](docs/SETUP_REMOTE.md)
 
-* [Remote machine](docs/SETUP_REMOTE.md)
-* [Local machine](docs/SETUP_LOCAL.md)
-* [Configuration](docs/CONFIGURATION.md)
+## Usage
+```
+> ./gradlew build
 
-## Demo
+Here's Mirakle. All tasks will be executed on a remote machine.
+:uploadToRemote
+:executeOnRemote
+...remote build output...
+:downloadFromRemote
+ 
 
-[![asciicast demo](samples/demo.png)](https://asciinema.org/a/101327)
+BUILD SUCCESSFUL
+ 
+Total time : 7.975 secs
+Task uploadToRemote took: 2.237 secs
+Task executeOnRemote took: 3.706 secs
+Task downloadFromRemote took: 1.597 secs
+```
 
-## 3rd-party IntelliJ Mainframer Plugin
+To disable remote execution pass `-x mirakle`
 
-Guys from [@elpassion](https://github.com/elpassion) maintain [IntelliJ Plugin for Mainframer](https://github.com/elpassion/mainframer-intellij-plugin) that makes integration of Mainframer with any IntelliJ project better. 
+```
+> ./gradlew build install -x mirakle
+```
 
-We highly recommend the plugin if you use IntelliJ with Mainframer!
-
-### How to Run Tests (for contributors)
-
-Dependencies: Bash, Docker.
-
-```console
-$ ci/build.sh
+## Configuration
+```groovy
+mirakle {
+    host "true-remote"
+    
+    //optional
+    remoteFolder ".mirakle"
+    excludeLocal += ["foo"]
+    excludeRemote += ["bar"]
+    rsyncToRemoteArgs += ["--stats", "-h"]
+    rsyncFromRemoteArgs += ["--compress-level=5", "--stats", "-h"]
+    sshArgs += ["-p 22"]
+}
 ```
 
 ## License
-
 ```
-Copyright 2017 Juno, Inc.
+Copyright 2017 Instamotor, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

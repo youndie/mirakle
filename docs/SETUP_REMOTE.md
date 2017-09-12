@@ -40,4 +40,4 @@ In such a case, you should place your declarations before the `stop` instruction
 
 ## Recipe
 
-We've built a [recipe to ease the setup of remote machine](../recipes/SETUP_REMOTE_MACHINE.md) for you.
+We've built a [recipe to ease the setup of remote machine](SETUP_REMOTE_RECIPE.md) for you.
