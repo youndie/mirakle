@@ -65,6 +65,7 @@ mirakle {
     sshArgs += ["-p 22"]
 }
 ```
+## [Contributing](docs/CONTRIBUTING.md)
 
 ## License
 ```
