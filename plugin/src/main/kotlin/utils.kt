@@ -20,8 +20,9 @@ fun Gradle.logTasks(vararg task: Task) {
 
             override fun afterExecute(task: Task, state: TaskState) {
                 if (task == targetTask) {
+                    val finishTime = System.currentTimeMillis()
                     buildFinished {
-                        println("Task ${task.name} took: ${prettyTime(System.currentTimeMillis() - startTime)}")
+                        println("Task ${task.name} took: ${prettyTime(finishTime - startTime)}")
                     }
                 }
             }
