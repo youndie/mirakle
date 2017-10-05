@@ -42,8 +42,8 @@ publishing {
 
             artifact sourcesJar
 
-            groupId rootProject.group
-            artifactId rootProject.name
+            groupId 'com.instamotor'
+            artifactId 'mirakle'
             version rootProject.version
 
             pom.withXml {
@@ -61,7 +61,6 @@ bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_API_KEY')
     publish = true
-    configurations = ['archives']
 
     pkg {
         repo = 'maven'
@@ -71,13 +70,21 @@ bintray {
         issueTrackerUrl = 'https://github.com/Instamotor-Labs/mirakle/issues'
         publications = ['MiraklePublication']
 
-        /*version {
+        version {
             name = rootProject.version
 
-            *//*gpg {
+            /*gpg { //TODO
                 sign = true
                 passphrase = System.getenv('BINTRAY_GPG_PASSPHRASE')
-            }*//*
-        }*/
+            }*/
+        }
     }
 }
+
+task validatePublishing {
+    doLast {
+        validateTagAndVersion()
+    }
+}
+
+bintrayUpload.dependsOn validatePublishing
