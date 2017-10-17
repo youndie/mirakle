@@ -15,14 +15,14 @@ Mirakle is designed specially for Gradle build system. It works as seamless as p
 
 
 ## Setup
-* Put this into `USER_HOME/.gradle/init.d/mirakle.gradle`
+* Put this into `USER_HOME/.gradle/init.d/mirakle_init.gradle`
 ```groovy
 initscript {
     repositories {
         jcenter()
     }
     dependencies {
-        classpath "com.instamotor:mirakle:1.0.1"
+        classpath "com.instamotor:mirakle:1.1.0"
     }
 }
  
@@ -71,11 +71,44 @@ mirakle {
     remoteFolder ".mirakle"
     excludeLocal += ["foo"]
     excludeRemote += ["bar"]
+    excludeCommon += ["**/foobar"]
     rsyncToRemoteArgs += ["--stats", "-h"]
     rsyncFromRemoteArgs += ["--compress-level=5", "--stats", "-h"]
     sshArgs += ["-p 22"]
 }
 ```
+### Per-project config
+You can configure Mirakle differently for any project. There's two ways:
+1. In `USER_HOME/.gradle/init.d/mirakle_init.gradle`
+```groovy
+initscript { .. }
+ 
+apply plugin: Mirakle
+ 
+rootProject {
+    if (name == "My Home Project") {
+        mirakle {
+            host "my-build-server"
+            sshArgs += ["-p 222"]
+        }
+    } else {
+        mirakle {
+            host "office-build-server"
+        }
+    }
+}
+```
+2. In `PROJECT_DIR/mirakle.gradle`. This is useful if you want too add the config to VCS.
+```groovy
+mirakle {
+    host "my-build-server"
+    sshArgs += ["-p 222"]
+}
+```
+**Note:** `mirakle.gradle` is the only Gradle build file in the project dir which is evaluated on local machine. Other build files are ignored for the sake of saving time.
+
+##### [Mainframer config](https://github.com/gojuno/mainframer/blob/development/docs/CONFIGURATION.md) is also supported.
+
 ## [Contributing](docs/CONTRIBUTING.md)
 
 ## License
