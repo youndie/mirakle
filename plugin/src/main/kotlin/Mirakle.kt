@@ -54,66 +54,64 @@ class Mirakle : Plugin<Gradle> {
 
                 println("Here's Mirakle ${BuildConfig.VERSION}. All tasks will be executed on ${config.host}.")
 
-                with(project) {
-                    val upload = task<Exec>("uploadToRemote") {
-                        setCommandLine("rsync")
-                        args(
-                                rootDir,
-                                "${config.host}:${config.remoteFolder}",
-                                "--rsh",
-                                "ssh ${config.sshArgs.joinToString(separator = " ")}",
-                                "--exclude=mirakle.gradle"
-                        )
-                        args(config.rsyncToRemoteArgs)
-                    }
-
-                    val execute = task<Exec>("executeOnRemote") {
-                        setCommandLine("ssh")
-                        args(config.sshArgs)
-                        args(
-                                config.host,
-                                "${config.remoteFolder}/${project.name}/gradlew",
-                                "-P$BUILD_ON_REMOTE=true",
-                                "-p ${config.remoteFolder}/${project.name}"
-                        )
-                        args(startParamsToArgs(startParamsCopy))
-
-                        isIgnoreExitValue = true
-
-                        standardOutput = modifyOutputStream(
-                                standardOutput,
-                                "${config.remoteFolder}/${project.name}",
-                                project.rootDir.path
-                        )
-                        errorOutput = modifyOutputStream(
-                                errorOutput,
-                                "${config.remoteFolder}/${project.name}",
-                                project.rootDir.path
-                        )
-                    }.mustRunAfter(upload)
-
-                    val download = task<Exec>("downloadFromRemote") {
-                        setCommandLine("rsync")
-                        args(
-                                "${config.host}:${config.remoteFolder}/${project.name}/",
-                                "./",
-                                "--rsh",
-                                "ssh ${config.sshArgs.joinToString(separator = " ")}",
-                                "--exclude=mirakle.gradle"
-                        )
-                        args(config.rsyncFromRemoteArgs)
-                    }.mustRunAfter(execute)
-
-                    val mirakle = task("mirakle").dependsOn(upload, execute, download)
-
-                    mirakle.doLast {
-                        execute as Exec
-                        execute.execResult.assertNormalExitValue()
-                    }
-
-                    gradle.logTasks(upload, execute, download)
-                    gradle.logBuild(startTime)
+                val upload = project.task<Exec>("uploadToRemote") {
+                    setCommandLine("rsync")
+                    args(
+                            project.rootDir,
+                            "${config.host}:${config.remoteFolder}",
+                            "--rsh",
+                            "ssh ${config.sshArgs.joinToString(separator = " ")}",
+                            "--exclude=mirakle.gradle"
+                    )
+                    args(config.rsyncToRemoteArgs)
                 }
+
+                val execute = project.task<Exec>("executeOnRemote") {
+                    setCommandLine("ssh")
+                    args(config.sshArgs)
+                    args(
+                            config.host,
+                            "${config.remoteFolder}/${project.name}/gradlew",
+                            "-P$BUILD_ON_REMOTE=true",
+                            "-p ${config.remoteFolder}/${project.name}"
+                    )
+                    args(startParamsToArgs(startParamsCopy))
+
+                    isIgnoreExitValue = true
+
+                    standardOutput = modifyOutputStream(
+                            standardOutput,
+                            "${config.remoteFolder}/${project.name}",
+                            project.rootDir.path
+                    )
+                    errorOutput = modifyOutputStream(
+                            errorOutput,
+                            "${config.remoteFolder}/${project.name}",
+                            project.rootDir.path
+                    )
+                }.mustRunAfter(upload)
+
+                val download = project.task<Exec>("downloadFromRemote") {
+                    setCommandLine("rsync")
+                    args(
+                            "${config.host}:${config.remoteFolder}/${project.name}/",
+                            "./",
+                            "--rsh",
+                            "ssh ${config.sshArgs.joinToString(separator = " ")}",
+                            "--exclude=mirakle.gradle"
+                    )
+                    args(config.rsyncFromRemoteArgs)
+                }.mustRunAfter(execute)
+
+                val mirakle = project.task("mirakle").dependsOn(upload, execute, download)
+
+                mirakle.doLast {
+                    execute as Exec
+                    execute.execResult.assertNormalExitValue()
+                }
+
+                gradle.logTasks(upload, execute, download)
+                gradle.logBuild(startTime)
             }
         }
     }
