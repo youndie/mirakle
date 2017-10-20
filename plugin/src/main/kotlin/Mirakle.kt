@@ -58,11 +58,12 @@ class Mirakle : Plugin<Gradle> {
                     val upload = task<Exec>("uploadToRemote") {
                         setCommandLine("rsync")
                         args(
-                                "--rsh=ssh",
                                 rootDir,
-                                "${config.host}:${config.remoteFolder}"
+                                "${config.host}:${config.remoteFolder}",
+                                "--rsh",
+                                "ssh ${config.sshArgs.joinToString(separator = " ")}",
+                                "--exclude=mirakle.gradle"
                         )
-                        args("--exclude=mirakle.gradle")
                         args(config.rsyncToRemoteArgs)
                     }
 
@@ -94,11 +95,12 @@ class Mirakle : Plugin<Gradle> {
                     val download = task<Exec>("downloadFromRemote") {
                         setCommandLine("rsync")
                         args(
-                                "--rsh=ssh",
                                 "${config.host}:${config.remoteFolder}/${project.name}/",
-                                "./"
+                                "./",
+                                "--rsh",
+                                "ssh ${config.sshArgs.joinToString(separator = " ")}",
+                                "--exclude=mirakle.gradle"
                         )
-                        args("--exclude=mirakle.gradle")
                         args(config.rsyncFromRemoteArgs)
                     }.mustRunAfter(execute)
 

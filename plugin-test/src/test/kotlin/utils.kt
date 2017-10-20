@@ -84,7 +84,8 @@ afterEvaluate {
 
     //contract
     assert uploadToRemote.commandLine[0] == "rsync"
-    assert uploadToRemote.args.contains("--rsh=ssh")
+    assert uploadToRemote.args.contains("--rsh")
+    assert uploadToRemote.args.contains("ssh -p 22")
     assert uploadToRemote.args.contains(rootDir.path)
     assert uploadToRemote.args.contains("localhost:$remoteFolder/.mirakle")
     assert uploadToRemote.args.contains("--exclude=mirakle.gradle")
@@ -128,7 +129,8 @@ afterEvaluate {
 
     //contract
     assert downloadFromRemote.commandLine[0] == "rsync"
-    assert downloadFromRemote.args.contains("--rsh=ssh")
+    assert downloadFromRemote.args.contains("--rsh")
+    assert downloadFromRemote.args.contains("ssh -p 22")
     assert downloadFromRemote.args.contains("localhost:$remoteFolder/.mirakle/" + name + "/")
     assert downloadFromRemote.args.contains("./")
     assert downloadFromRemote.args.contains("--exclude=mirakle.gradle")
