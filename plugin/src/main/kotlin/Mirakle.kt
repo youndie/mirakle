@@ -295,6 +295,7 @@ fun getMainframerConfigOrNull(projectDir: File): MirakleExtension? {
 const val BUILD_ON_REMOTE = "mirakle.build.on.remote"
 const val FALLBACK = "mirakle.build.fallback"
 
+//TODO test
 fun Gradle.supportAndroidStudioAdvancedProfiling(config: MirakleExtension, upload: Exec, execute: Exec, download: Exec) {
     if (startParameter.projectProperties.containsKey("android.advanced.profiling.transforms")) {
         println("Android Studio advanced profilling enabled. Profiler files will be uploaded to remote project dir.")
