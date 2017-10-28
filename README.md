@@ -75,6 +75,7 @@ mirakle {
     rsyncToRemoteArgs += ["--stats", "-h"]
     rsyncFromRemoteArgs += ["--compress-level=5", "--stats", "-h"]
     sshArgs += ["-p 22"]
+    fallback true
 }
 ```
 ### Per-project config
