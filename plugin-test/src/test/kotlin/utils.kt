@@ -83,6 +83,50 @@ rootProject {
 }
 """
 
+val MIRAKLE_INIT_WITH_DOWNLOAD_IN_PARALLEL = fun(remoteFolder: String) = """
+initscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.instamotor:mirakle:${BuildConfig.VERSION}"
+    }
+}
+
+apply plugin: Mirakle
+
+rootProject {
+    mirakle {
+        host "localhost"
+        remoteFolder "$remoteFolder/mirakle"
+        downloadInParallel true
+    }
+}
+"""
+
+val MIRAKLE_INIT_WITH_DOWNLOAD_IN_PARALLEL_AND_UNRESOLVABLE_HOST = fun(remoteFolder: String) = """
+initscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.instamotor:mirakle:${BuildConfig.VERSION}"
+    }
+}
+
+apply plugin: Mirakle
+
+rootProject {
+    mirakle {
+        host "affsfnjkdasfnajdkfhajlkdfhljkdfhl"
+        remoteFolder "$remoteFolder/mirakle"
+        downloadInParallel true
+    }
+}
+"""
+
 val MIRAKLE_GRADLE_ASSERT_EXEC_ARGS = fun(remoteFolder: String) = ASSERT_EXEC_ARGS(remoteFolder)
 
 val ASSERT_EXEC_ARGS = fun(remoteFolder: String) = """
@@ -237,6 +281,58 @@ val ASSERT_CONTAINS_SYSTEM_PROPERTIES = fun(properties: Map<String, String>) =
         """
         if(!gradle.startParameter.systemPropertiesArgs.entries.containsAll(mapOf(${properties.entries.joinToString { "\"${it.key}\" to \"${it.value}\"" }}).entries))
             throw Exception("Expected system properties $properties, but was = " + gradle.startParameter.systemPropertiesArgs)
+        """
+
+val ASSERT_DOWNLOAD_IN_PARALLEL_AFTER_UPLOAD =
+        """
+        afterEvaluate {
+            def uploadToRemote = getTasksByName("uploadToRemote", false)[0]
+            def downloadInParallel = getTasksByName("downloadInParallel", false)[0]
+
+            def uploadWasExecuted = false
+            uploadToRemote.doFirst {
+                uploadWasExecuted = true
+            }
+
+            downloadInParallel.doFirst {
+                if (!uploadWasExecuted) throw Exception("uploadToRemote wasn't executed before downloadInParallel")
+            }
+        }
+        """
+
+val ASSERT_DOWNLOAD_IN_PARALLEL_BEFORE_EXECUTE =
+        """
+        afterEvaluate {
+            def executeOnRemote = getTasksByName("executeOnRemote", false)[0]
+            def downloadInParallel = getTasksByName("downloadInParallel", false)[0]
+
+            def wasExecuted = false
+
+            executeOnRemote.doFirst {
+                wasExecuted = true
+            }
+
+            downloadInParallel.doFirst {
+                if (wasExecuted) throw Exception("executeOnRemote was executed before downloadInParallel")
+            }
+        }
+        """
+val ASSERT_DOWNLOAD_AFTER_DOWNLOAD_IN_PARALLEL =
+        """
+        afterEvaluate {
+            def downloadFromRemote = getTasksByName("downloadFromRemote", false)[0]
+            def downloadInParallel = getTasksByName("downloadInParallel", false)[0]
+
+            def downloadInParallelWasFinished = false
+
+            downloadInParallel.doLast {
+                downloadInParallelWasFinished = true
+            }
+
+            downloadFromRemote.doFirst {
+                if (!downloadInParallelWasFinished) throw Exception("downloadInParallel was not finished before downloadFromRemote")
+            }
+        }
         """
 
 fun SpecBody.temporaryFolder(parentDir: File? = null) = object : ReadOnlyProperty<Any?, TemporaryFolder> {
