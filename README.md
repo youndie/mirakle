@@ -1,7 +1,7 @@
 # Mirakle
 A Gradle plugin that allows you to move build process from a local machine to a remote one.
 
-Compatible with Gradle 3.3+. Works seamlessly with IntelliJ IDEA and Android Studio.
+Compatible with Gradle 4.0+. Works seamlessly with IntelliJ IDEA and Android Studio.
 
 #### Why
 Remote machine supposed to be much performant than you working machine.
@@ -22,7 +22,7 @@ initscript {
         jcenter()
     }
     dependencies {
-        classpath "com.instamotor:mirakle:1.2.0"
+        classpath "com.instamotor:mirakle:1.3.0"
     }
 }
  
@@ -76,6 +76,8 @@ mirakle {
     rsyncFromRemoteArgs += ["--compress-level=5", "--stats", "-h"]
     sshArgs += ["-p 22"]
     fallback true
+    downloadInParallel true
+    downloadInterval 2000
 }
 ```
 ### Per-project config
