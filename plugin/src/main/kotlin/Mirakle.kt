@@ -7,18 +7,28 @@ import com.instamotor.BuildConfig
 import org.apache.commons.io.output.WriterOutputStream
 import org.gradle.StartParameter
 import org.gradle.api.Plugin
+import org.gradle.api.Task
+import org.gradle.api.execution.TaskExecutionListener
 import org.gradle.api.internal.AbstractTask
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.configuration.ConsoleOutput
 import org.gradle.api.logging.configuration.ShowStacktrace
 import org.gradle.api.tasks.Exec
+import org.gradle.api.tasks.TaskState
+import org.gradle.process.internal.ExecAction
+import org.gradle.process.internal.ExecActionFactory
+import org.gradle.process.internal.ExecException
 import org.gradle.tooling.GradleConnector
+import org.gradle.workers.IsolationMode
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.nio.file.Files
-import java.util.Properties
+import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
 
 class Mirakle : Plugin<Gradle> {
     override fun apply(gradle: Gradle) {
@@ -107,6 +117,40 @@ class Mirakle : Plugin<Gradle> {
                     args(config.rsyncFromRemoteArgs)
                 }.mustRunAfter(execute) as Exec
 
+                if (config.downloadInParallel) {
+                    if (config.downloadInterval <= 0) throw MirakleException("downloadInterval must be >0")
+
+                    val downloadInParallel = project.task<AbstractTask>("downloadInParallel") {
+                        doFirst {
+                            val downloadExecAction = services.get(ExecActionFactory::class.java).newExecAction().apply {
+                                setCommandLine(download.commandLine)
+                                setArgs(download.args)
+                                standardOutput = download.standardOutput
+                                standardInput = download.standardInput
+                            }
+
+                            //It's impossible to pass this as serializable params to worker
+                            //God forgive us
+                            DownloadInParallelWorker.downloadExecAction = downloadExecAction
+                            DownloadInParallelWorker.gradle = gradle
+
+                            services.get(WorkerExecutor::class.java).submit(DownloadInParallelWorker::class.java) {
+                                it.isolationMode = IsolationMode.NONE
+                                it.setParams(config.downloadInterval)
+                            }
+                        }
+
+                        onlyIf {
+                            config.downloadInParallel && upload.execResult.exitValue == 0 && !execute.didWork
+                        }
+                    }
+
+                    downloadInParallel.mustRunAfter(upload)
+                    download.mustRunAfter(downloadInParallel)
+
+                    gradle.startParameter.setTaskNames(listOf("downloadInParallel", "mirakle"))
+                }
+
                 val mirakle = project.task("mirakle").dependsOn(upload, execute, download)
 
                 if (!config.fallback) {
@@ -118,7 +162,7 @@ class Mirakle : Plugin<Gradle> {
                         onlyIf { upload.execResult.exitValue != 0 }
 
                         doFirst {
-                            println("Upload to remote failed. Continuing with fallback")
+                            println("Upload to remote failed. Continuing with fallback.")
 
                             val connection = GradleConnector.newConnector()
                                     .forProjectDirectory(gradle.rootProject.projectDir)
@@ -188,6 +232,9 @@ open class MirakleExtension {
     var sshArgs = emptySet<String>()
 
     var fallback = false
+
+    var downloadInParallel = false
+    var downloadInterval = 2000L
 }
 
 fun startParamsToArgs(params: StartParameter) = with(params) {
@@ -326,9 +373,9 @@ fun Gradle.supportAndroidStudioAdvancedProfiling(config: MirakleExtension, uploa
             val rootProfilerJarArg = "android.advanced.profiling.transforms=${config.remoteFolder}/${gradle.rootProject.name}/${jarInRootProject.name}"
             val rootProfilerPropArg = "android.profiler.properties=${config.remoteFolder}/${gradle.rootProject.name}/${propInRootProject.name}"
 
-            execute.args = execute.args.apply {
-                set(execute.args.indexOf(profilerJarPathArg), rootProfilerJarArg)
-                set(execute.args.indexOf(profilerPropPathArg), rootProfilerPropArg)
+            execute.args = execute.args!!.apply {
+                set(indexOf(profilerJarPathArg), rootProfilerJarArg)
+                set(indexOf(profilerPropPathArg), rootProfilerPropArg)
             }
         }
 
@@ -336,5 +383,36 @@ fun Gradle.supportAndroidStudioAdvancedProfiling(config: MirakleExtension, uploa
             download.args("--exclude=${jarInRootProject.name}")
             download.args("--exclude=${propInRootProject.name}")
         }
+    }
+}
+
+class DownloadInParallelWorker @Inject constructor(val downloadInterval: Long) : Runnable {
+    override fun run() {
+        val mustInterrupt = AtomicBoolean()
+
+        gradle.addListener(object : TaskExecutionListener {
+            override fun afterExecute(task: Task, state: TaskState?) {
+                if (task.name == "executeOnRemote") {
+                    gradle.removeListener(this)
+                    mustInterrupt.set(true)
+                }
+            }
+
+            override fun beforeExecute(task: Task) {}
+        })
+
+        while (!mustInterrupt.get()) {
+            try {
+                Thread.sleep(downloadInterval)
+                downloadExecAction.execute()
+            } catch (e: ExecException) {
+                println("Parallel download failed with exception $e")
+            }
+        }
+    }
+
+    companion object {
+        lateinit var gradle: Gradle
+        lateinit var downloadExecAction: ExecAction
     }
 }

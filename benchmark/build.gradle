@@ -1,8 +1,94 @@
+group rootProject.group
+def benchmarkVersion = '1.0.0'
+version benchmarkVersion
+
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+
+
 repositories {
+    mavenCentral()
     jcenter()
 }
 
 dependencies {
+    compile gradleApi()
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile "org.gradle:gradle-tooling-api:3.3"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
+
+sourceSets {
+    main.java.srcDirs += 'src/main/kotlin/'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+def pomConfig = {
+    licenses {
+        license {
+            name 'The Apache Software License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            distribution 'repo'
+        }
+    }
+}
+
+publishing {
+    publications {
+        MiraklePublication(MavenPublication) {
+            from components.java
+
+            artifact sourcesJar
+
+            groupId 'com.instamotor'
+            artifactId 'mirakle-benchmark'
+            version benchmarkVersion
+
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('name', 'Mirakle Benchmark')
+                root.appendNode('url', 'https://github.com/Instamotor-Labs/mirakle')
+                root.children().last() + pomConfig
+            }
+        }
+    }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_API_KEY')
+    publish = true
+
+    pkg {
+        repo = 'maven'
+        name = 'mirakle-benchmark'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/Instamotor-Labs/mirakle.git'
+        issueTrackerUrl = 'https://github.com/Instamotor-Labs/mirakle/issues'
+        publications = ['MiraklePublication']
+
+        version {
+            name = benchmarkVersion
+
+            /*gpg { //TODO
+                sign = true
+                passphrase = System.getenv('BINTRAY_GPG_PASSPHRASE')
+            }*/
+        }
+    }
+}
+
+task validatePublishing {
+    doLast {
+        //validateTagAndVersion()
+        if (gradle.startParameter.configureOnDemand)
+        //WTF https://stackoverflow.com/questions/25668020/gradle-artifactory-plugin-not-generating-pom-file/32064236#comment61270226_32064236
+            throw new Exception("Can't upload to bintray with enabled configureOnDemand")
+    }
+}
+
+bintrayUpload.dependsOn validatePublishing

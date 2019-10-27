@@ -4,8 +4,10 @@ import org.gradle.BuildResult
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionListener
+import org.gradle.api.internal.AbstractTask
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.tasks.TaskState
+import org.gradle.internal.service.ServiceRegistry
 
 fun Gradle.logTasks(vararg task: Task) {
     task.forEach { targetTask ->
@@ -79,4 +81,10 @@ class KotlinClosure1<in T : Any, V : Any>(
 
     @Suppress("unused") // to be called dynamically by Groovy
     fun doCall(it: T): V? = it.function()
+}
+
+val Task.services: ServiceRegistry get() {
+    val field = AbstractTask::class.java.getDeclaredField("services")
+    field.isAccessible = true
+    return field.get(this) as ServiceRegistry
 }
