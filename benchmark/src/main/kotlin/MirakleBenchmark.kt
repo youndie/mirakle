@@ -48,10 +48,11 @@ class MirakleBenchmark : Plugin<Gradle> {
 
                 if (benchmarkConfig.name == null) throw IllegalArgumentException("Mirakle benchmark name is not defined.")
                 if (benchmarkConfig.launchNumber == null) throw IllegalArgumentException("Mirakle benchmark launch number is not defined.")
+                if (benchmarkConfig.resultsFolder == null) throw IllegalArgumentException("Mirakle benchmark results folder is not defined.")
 
                 project.task<AbstractTask>("mirakleBenchmark") {
                     doFirst {
-                        val resultsRoot = File("build/mirakle-benchmark-results/${benchmarkConfig.name}")
+                        val resultsRoot = File("${benchmarkConfig.resultsFolder}/${benchmarkConfig.name}")
 
                         resultsRoot.apply {
                             if (exists()) deleteRecursively()
@@ -133,6 +134,7 @@ const val BENCHMARK = "mirakle.benchmark"
 open class MirakleBenchmarkExtension {
     var name: String? = null
     var launchNumber: Int? = null
+    var resultsFolder: String? = null
 }
 
 fun runTasks(tasks: List<String>, connection: ProjectConnection, output: OutputStream): LogEntry {

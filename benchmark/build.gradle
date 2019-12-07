@@ -1,11 +1,10 @@
 group rootProject.group
-def benchmarkVersion = '1.0.0'
+def benchmarkVersion = '1.0.1'
 version benchmarkVersion
 
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
-
 
 repositories {
     mavenCentral()
