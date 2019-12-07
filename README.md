@@ -22,7 +22,7 @@ initscript {
         jcenter()
     }
     dependencies {
-        classpath "com.instamotor:mirakle:1.3.1"
+        classpath "com.instamotor:mirakle:1.3.2"
     }
 }
  
@@ -60,6 +60,24 @@ To disable remote execution pass `-x mirakle`
 
 ```
 > ./gradlew build install -x mirakle
+```
+
+#### Opt-in execution
+By default Mirakle is executing everytime unless `-x` is provided. To reverse this behaviour add `if` statement to init script:
+
+```
+if (startParameter.taskNames.contains("mirakle")) {
+    apply plugin: Mirakle
+
+    rootProject {
+        mirakle {
+            ...
+        }
+    }
+}
+```
+```
+> ./gradlew heavyBuild mirakle
 ```
 
 ## Configuration
