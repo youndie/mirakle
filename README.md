@@ -7,7 +7,7 @@ Compatible with Gradle 4.0+. Works seamlessly with IntelliJ IDEA and Android Stu
 Remote machine supposed to be much performant than you working machine.
 Also having a sufficient network bandwidth or small amount of data that your build produce, you gain **build speed boost**.
 
-#### How it differs from [Mainframer](https://github.com/gojuno/mainframer)
+#### How it differs from [Mainframer](https://github.com/buildfoundation/mainframer)
 
 Mirakle is designed specially for Gradle build system. It works as seamless as possible. Once plugin installed, you workflow will not be different at all.
 
@@ -128,7 +128,7 @@ mirakle {
 ```
 **Note:** `mirakle.gradle` is the only Gradle build file in the project dir which is evaluated on local machine. Other build files are ignored for the sake of saving time.
 
-##### [Mainframer config](https://github.com/gojuno/mainframer/blob/development/docs/CONFIGURATION.md) is also supported.
+##### [Mainframer config](https://github.com/buildfoundation/mainframer/blob/v2.1.0/docs/CONFIGURATION.md) is also supported.
 
 ## [Contributing](docs/CONTRIBUTING.md)
 
