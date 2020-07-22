@@ -1,4 +1,5 @@
 import groovy.lang.Closure
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.BuildAdapter
 import org.gradle.BuildResult
 import org.gradle.api.Project
@@ -88,3 +89,14 @@ val Task.services: ServiceRegistry get() {
     field.isAccessible = true
     return field.get(this) as ServiceRegistry
 }
+
+/*
+* On Windows rsync is used only under Cygwin environment
+* and classical Windows path "C:\Users" must be replaced by "/cygdrive/c/Users"
+* */
+fun fixDirForRsync(dir: String) =
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            val windowsDisk = dir.first().toLowerCase()
+            val path = dir.substringAfter(":\\").replace('\\', '/')
+            "/cygdrive/$windowsDisk/$path"
+        } else dir

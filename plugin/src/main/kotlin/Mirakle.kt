@@ -75,17 +75,17 @@ class Mirakle : Plugin<Gradle> {
                 val upload = project.task<Exec>("uploadToRemote") {
                     setCommandLine("rsync")
                     args(
-                            project.rootDir,
+                            fixDirForRsync(project.rootDir.toString()),
                             "${config.host}:${config.remoteFolder}",
                             "--rsh",
-                            "ssh ${config.sshArgs.joinToString(separator = " ")}",
+                            "${config.sshExecutable} ${config.sshArgs.joinToString(separator = " ")}",
                             "--exclude=mirakle.gradle"
                     )
                     args(config.rsyncToRemoteArgs)
                 }
 
                 val execute = project.task<Exec>("executeOnRemote") {
-                    setCommandLine("ssh")
+                    setCommandLine(config.sshExecutable)
                     args(config.sshArgs)
                     args(
                             config.host,
@@ -115,7 +115,7 @@ class Mirakle : Plugin<Gradle> {
                             "${config.host}:${config.remoteFolder}/${project.name}/",
                             "./",
                             "--rsh",
-                            "ssh ${config.sshArgs.joinToString(separator = " ")}",
+                            "${config.sshExecutable} ${config.sshArgs.joinToString(separator = " ")}",
                             "--exclude=mirakle.gradle"
                     )
                     args(config.rsyncFromRemoteArgs)
@@ -234,6 +234,7 @@ open class MirakleExtension {
         get() = field.plus(excludeRemote.plus(excludeCommon).map { "--exclude=$it" })
 
     var sshArgs = emptySet<String>()
+    var sshExecutable = "ssh"
 
     var fallback = false
 
